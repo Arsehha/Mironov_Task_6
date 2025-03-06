@@ -1,0 +1,12 @@
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.csproj.AssemblyReference.cache
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.csproj.SuggestedBindingRedirects.cache
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.Forms.Field.resources
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.Form1.resources
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.Properties.Resources.resources
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.csproj.GenerateResource.cache
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.csproj.CoreCompileInputs.cache
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\bin\Debug\Mironov_Task_5.exe.config
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\bin\Debug\Mironov_Task_5.exe
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\bin\Debug\Mironov_Task_5.pdb
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.exe
+X:\3Kurs\SP04\Mironov_Task_5\Mironov_Task_5\obj\Debug\Mironov_Task_5.pdb
