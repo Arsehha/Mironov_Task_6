@@ -144,6 +144,10 @@ namespace Mironov_Task_5.Forms
                     }
                 }
             }
+            resultLabel.Text = "Судоку решено верно";
+            resultLabel.ForeColor = Color.Green;
+            timer.Start();
+            return;
         }
 
         //Таймер для лейбла
