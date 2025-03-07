@@ -31,6 +31,7 @@
             this.buttonStartHard = new System.Windows.Forms.Button();
             this.buttonStartMed = new System.Windows.Forms.Button();
             this.buttonStartEz = new System.Windows.Forms.Button();
+            this.buttonLoad = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonStartHard
@@ -45,7 +46,7 @@
             // 
             // buttonStartMed
             // 
-            this.buttonStartMed.Location = new System.Drawing.Point(113, 94);
+            this.buttonStartMed.Location = new System.Drawing.Point(113, 93);
             this.buttonStartMed.Name = "buttonStartMed";
             this.buttonStartMed.Size = new System.Drawing.Size(100, 23);
             this.buttonStartMed.TabIndex = 1;
@@ -63,11 +64,23 @@
             this.buttonStartEz.UseVisualStyleBackColor = true;
             this.buttonStartEz.Click += new System.EventHandler(this.buttonStartEz_Click);
             // 
+            // buttonLoad
+            // 
+            this.buttonLoad.Location = new System.Drawing.Point(266, 189);
+            this.buttonLoad.Name = "buttonLoad";
+            this.buttonLoad.Size = new System.Drawing.Size(75, 23);
+            this.buttonLoad.TabIndex = 3;
+            this.buttonLoad.Text = "Загрузить ";
+            this.buttonLoad.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.buttonLoad.UseVisualStyleBackColor = true;
+            this.buttonLoad.Click += new System.EventHandler(this.buttonLoad_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(353, 224);
+            this.Controls.Add(this.buttonLoad);
             this.Controls.Add(this.buttonStartEz);
             this.Controls.Add(this.buttonStartMed);
             this.Controls.Add(this.buttonStartHard);
@@ -82,6 +95,7 @@
         private System.Windows.Forms.Button buttonStartHard;
         private System.Windows.Forms.Button buttonStartMed;
         private System.Windows.Forms.Button buttonStartEz;
+        private System.Windows.Forms.Button buttonLoad;
     }
 }
 

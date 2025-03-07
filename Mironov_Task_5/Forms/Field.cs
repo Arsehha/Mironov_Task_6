@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,13 +15,22 @@ namespace Mironov_Task_5.Forms
 {
     public partial class Field : Form
     {
+        private bool prod = false;
+        private string fileName;
         private string receivedText;
+        bool load = false;
         int[,] masMain = new int[9, 9];
         int[,] masGame = new int[9, 9];
-        private Timer timer;
+        int[,] masUser = new int[9, 9];
         private DataGridView dgv;
-        Button resultButton = new Button();
-        System.Windows.Forms.Label resultLabel = new System.Windows.Forms.Label();
+        private Timer autoSaveTimer;
+        private Button SaveFileButton = new Button();
+        private Button TestButton = new Button();
+        Panel panelStart = new Panel();
+        private Button AgreeButton = new Button();
+        TextBox textBoxFileName = new TextBox();
+
+
 
         public Field(string text)
         {
@@ -29,10 +40,6 @@ namespace Mironov_Task_5.Forms
             this.Text = "Судоку: " + receivedText;
             this.Size = new Size(460, 550);
 
-            timer = new Timer();
-            timer.Interval = 3000;
-            timer.Tick += Timer_Tick;
-
             CreateControls();
 
             generatedMassive(masMain);
@@ -41,26 +48,65 @@ namespace Mironov_Task_5.Forms
             FillDataGridView(masGame);
         }
 
+        public Field(string text, int[,] masMain, int[,]masGame, int[,] masUser)
+        {
+            InitializeComponent();
+            fileName = text;
+            this.masMain = masMain;
+            this.masGame = masGame;
+            this.masUser = masUser;
+
+            this.Text = "Загружен файл: " + fileName;
+            this.Size = new Size(460, 550);
+
+            CreateControls();
+            panelStart.Visible = false;
+            panelStart.Enabled = false;
+
+            FillDataGridView(masGame);
+            FillDataGridViewUser(masUser);
+        }
+
         private void CreateControls()
         {
-            //Label
-            resultLabel.Text = "Ваш результат";
-            resultLabel.Size = new Size(300, 30);
-            resultLabel.Location = new Point(140, 455);
-            resultLabel.Font = new Font("Arial", 12, FontStyle.Bold);
-            resultLabel.ForeColor = Color.Gray;
-            resultLabel.TextAlign = ContentAlignment.MiddleCenter;
+            //Panel
+            panelStart.Dock = DockStyle.Top;
+            panelStart.Height = 500; 
 
-            this.Controls.Add(resultLabel);
+            this.Controls.Add(panelStart);
 
-            //Button
-            resultButton.Text = "Проверить себя";
-            resultButton.Size = new Size(100, 50);
-            resultButton.Location = new Point(25, 450);
+            //textbox
+            textBoxFileName.Location = new System.Drawing.Point(135, 230); // Устанавливаем местоположение
+            textBoxFileName.Width = 200; // Устанавливаем ширину
 
-            resultButton.Click += resultButton_Click;
+            panelStart.Controls.Add(textBoxFileName);
 
-            this.Controls.Add(resultButton);
+            // Создаем кнопку
+            AgreeButton.Text = "Подтвердить";
+            AgreeButton.Location = new System.Drawing.Point(190, 260);
+
+            AgreeButton.Click += AgreeName;
+
+            panelStart.Controls.Add(AgreeButton);
+
+            //SaveFileButton
+            SaveFileButton.Text = "Сохранить";
+            SaveFileButton.Size = new Size(100, 50);
+            SaveFileButton.Location = new Point(175 , 450);
+
+            SaveFileButton.Click += (sender, e) => SaveSudoku();
+
+            this.Controls.Add(SaveFileButton);
+
+            //TestButton
+            TestButton.Text = "Подсмотреть";
+            TestButton.Size = new Size(100, 50);
+            TestButton.Location = new Point(20, 450);
+
+                TestButton.Click += (sender, e) => OpenTestForm();
+
+            if(!prod)
+            this.Controls.Add(TestButton);
 
             //DataGridView
             dgv = new DataGridView
@@ -88,8 +134,35 @@ namespace Mironov_Task_5.Forms
             }
 
             dgv.CellPainting += Dgv_CellPainting;
+            dgv.CellValueChanged += dgv_CellValueChanged;
+
 
             this.Controls.Add(dgv);
+
+            // Создаем и настраиваем таймер
+            autoSaveTimer = new Timer();
+            autoSaveTimer.Interval = 30000; // 30 секунд
+            autoSaveTimer.Tick += AutoSaveTimer_Tick;
+            autoSaveTimer.Start(); // Запуск таймера
+        }
+
+        //Подтверждение названия
+        private void AgreeName(object sender, EventArgs e)
+        {
+            fileName = textBoxFileName.Text.Trim();
+            fileName += $"_{receivedText}_{DateTime.Now:MM-dd_HH-mm}";
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                MessageBox.Show("Введите название файла!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else
+            {
+                MessageBox.Show($"Файл сохранится как: {fileName}.json", "Подтверждено", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                SaveSudoku();
+                panelStart.Visible = false;
+                panelStart.Enabled = false;
+            }
+
         }
 
         //Отрисовка ячеек
@@ -109,54 +182,6 @@ namespace Mironov_Task_5.Forms
             }
 
             e.Handled = true;
-        }
-
-        //Результирующая кнопка
-        private void resultButton_Click(object sender, EventArgs e)
-        {
-            int rows = dgv.RowCount;
-            int columns = dgv.ColumnCount;
-
-            for (int row = 0; row < rows; row++)
-            {
-                for (int col = 0; col < columns; col++)
-                {
-                    if (dgv.Rows[row].Cells[col].Value != null)
-                    {
-                        if (masMain[row,col] == Convert.ToInt32(dgv.Rows[row].Cells[col].Value))
-                        {
-
-                        }
-                        else
-                        {
-                            resultLabel.Text = "Судоку решено не верно";
-                            resultLabel.ForeColor = Color.Red;
-                            timer.Start();
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        resultLabel.Text = "Судоку не полностью заполнено";
-                        resultLabel.ForeColor = Color.Red;
-                        timer.Start();
-                        return;
-                    }
-                }
-            }
-            resultLabel.Text = "Судоку решено верно";
-            resultLabel.ForeColor = Color.Green;
-            timer.Start();
-            return;
-        }
-
-        //Таймер для лейбла
-        private void Timer_Tick(object sender, EventArgs e)
-        {
-            resultLabel.Text = "Ваш результат";
-            resultLabel.ForeColor = Color.Gray;
-
-            timer.Stop();
         }
 
         //Генерация судоку
@@ -288,6 +313,299 @@ namespace Mironov_Task_5.Forms
                     }
                 }
             }
+            load = true;
+        }
+
+        //Заполнение DataGridView
+        private void FillDataGridViewUser(int[,] mas)
+        {
+            for (int rows = 0; rows < 9; rows++)
+            {
+                for (int columns = 0; columns < 9; columns++)
+                {
+                    if (mas[rows, columns] != 0)
+                    {
+                        dgv.Rows[rows].Cells[columns].Value = mas[rows, columns];
+                        ValidateCell(rows, columns, mas[rows, columns]);
+                    }
+                }
+            }
+        }
+
+        //Сохранение
+        private void SaveSudoku()
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                MessageBox.Show("Сначала введите название файла!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                for (int rows = 0; rows < 9; rows++)
+                {
+                    for (int columns = 0; columns < 9; columns++)
+                    {
+                        if (dgv.Rows[rows].Cells[columns].Value != null && dgv.Rows[rows].Cells[columns].ReadOnly != true)
+                        {
+                            if (int.TryParse(dgv.Rows[rows].Cells[columns].Value.ToString(), out int cellValue))
+                            {
+                                masUser[rows, columns] = cellValue;
+                            }
+                            else
+                            {
+                                masUser[rows, columns] = 0;
+                            }
+                        }
+                    }
+                }
+
+                var data = new
+                {
+                    Array1 = ConvertToJaggedArray(masMain),
+                    Array2 = ConvertToJaggedArray(masGame),
+                    Array3 = ConvertToJaggedArray(masUser)
+                };
+
+                string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText($"{fileName}.json", json);
+            }
+            catch (Exception ex)
+            { }
+        }
+
+        private void AutoSaveTimer_Tick(object sender, EventArgs e)
+        {
+            // Проверяем, есть ли имя файла перед сохранением
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+            else
+            {
+                SaveSudoku();
+            }
+        }
+
+        // Метод для конвертации двумерного массива в ступенчатый массив (List<int[]>)
+        private List<int[]> ConvertToJaggedArray(int[,] array)
+        {
+            var list = new List<int[]>();
+            for (int i = 0; i < array.GetLength(0); i++)
+            {
+                int[] row = new int[array.GetLength(1)];
+                for (int j = 0; j < array.GetLength(1); j++)
+                {
+                    row[j] = array[i, j];
+                }
+                list.Add(row);
+            }
+            return list;
+        }
+
+        //Событие изменения значения в ячейке
+        private void dgv_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (!load)
+                return;
+
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                var cell = dgv.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+                if (int.TryParse(cell.Value?.ToString(), out int newValue) && newValue >= 1 && newValue <= 9)
+                {
+                    ValidateCell(e.RowIndex, e.ColumnIndex, newValue);
+                }
+                else
+                {
+                    cell.Value = "";
+                }
+            }
+        }
+
+        // Валидация ячейки
+        private void ValidateCell(int row, int col, int value)
+        {
+            bool isValid = true;
+
+            // Проверка строки
+            for (int c = 0; c < 9; c++)
+            {
+                if (c != col && dgv.Rows[row].Cells[c].Value?.ToString() == value.ToString())
+                {
+                    isValid = false;
+                    break;
+                }
+            }
+
+            // Проверка столбца
+            for (int r = 0; r < 9; r++)
+            {
+                if (r != row && dgv.Rows[r].Cells[col].Value?.ToString() == value.ToString())
+                {
+                    isValid = false;
+                    break;
+                }
+            }
+
+            // Проверка 3 на 3 блока
+            int startRow = (row / 3) * 3;
+            int startCol = (col / 3) * 3;
+            for (int r = startRow; r < startRow + 3; r++)
+            {
+                for (int c = startCol; c < startCol + 3; c++)
+                {
+                    if ((r != row || c != col) && dgv.Rows[r].Cells[c].Value?.ToString() == value.ToString())
+                    {
+                        isValid = false;
+                        break;
+                    }
+                }
+            }
+
+            // Если невалидное значение, помечаем красным
+            var cell = dgv.Rows[row].Cells[col];
+            if (!isValid)
+            {
+                cell.Style.BackColor = Color.Red;
+
+                // Возвращаем цвет всех ячеек в блоке к обычному
+                ResetBlockColors(row, col);
+            }
+            else
+            {
+                // Если ячейка валидна, перекрашиваем в белый или в зеленый
+                cell.Style.BackColor = Color.White;
+
+                CheckBlockCompletion(row, col);
+
+                // Если значение валидное, проверяем, нужно ли перекрасить в зеленый
+                bool isSolved = true;
+
+                // Проверка всей таблицы на корректность
+                for (int rows = 0; rows < 9; rows++)
+                {
+                    for (int columns = 0; columns < 9; columns++)
+                    {
+                        var cellValue = dgv.Rows[rows].Cells[columns].Value;
+                        if (cellValue == null || cellValue.ToString() != masMain[rows, columns].ToString())
+                        {
+                            isSolved = false;
+                            break;
+                        }
+                    }
+                }
+
+                // Если судоку решено верно
+                if (isSolved)
+                {
+                    MessageBox.Show("Судоку решено верно!", "Поздравляем", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private void CheckBlockCompletion(int row, int col)
+        {
+            int startRow = (row / 3) * 3;
+            int startCol = (col / 3) * 3;
+
+            bool isBlockValid = true;
+
+            // Проверяем все ячейки блока, существует ли строка и ячейка
+            for (int r = startRow; r < startRow + 3; r++)
+            {
+                if (r >= dgv.RowCount) continue;  // Проверяем, что строка существует
+
+                for (int c = startCol; c < startCol + 3; c++)
+                {
+                    if (c >= dgv.ColumnCount) continue;  // Проверяем, что ячейка существует
+
+                    var cell = dgv.Rows[r].Cells[c];
+                    if (cell != null && (cell.Value == null || string.IsNullOrEmpty(cell.Value.ToString()) || cell.Style.BackColor == Color.Red))
+                    {
+                        isBlockValid = false;
+                        break;
+                    }
+                }
+
+                if (!isBlockValid)
+                    break;
+            }
+
+            // Если блок валиден, перекрашиваем его в зелёный
+            if (isBlockValid)
+            {
+                for (int r = startRow; r < startRow + 3; r++)
+                {
+                    if (r >= dgv.RowCount) continue;  // Проверяем, что строка существует
+
+                    for (int c = startCol; c < startCol + 3; c++)
+                    {
+                        if (c >= dgv.ColumnCount) continue;  // Проверяем, что ячейка существует
+
+                        var cell = dgv.Rows[r].Cells[c];
+                        if (cell != null)
+                            cell.Style.BackColor = Color.Green;
+                    }
+                }
+            }
+            else
+            {
+                // Если блок не валиден, возвращаем ячейки к обычному цвету
+                for (int r = startRow; r < startRow + 3; r++)
+                {
+                    for (int c = startCol; c < startCol + 3; c++)
+                    {
+                        var cell = dgv.Rows[r].Cells[c];
+                        if (cell.Value != null)
+                        {
+                            // Проверка цвета ячейки перед изменением
+                            if (cell.Style.BackColor != Color.Red)
+                            {
+                                if (cell.Value.ToString() == masGame[r, c].ToString())
+                                    cell.Style.BackColor = Color.Gray;
+                                else
+                                    cell.Style.BackColor = Color.White;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Метод для сброса цвета всех ячеек в блоке к обычному состоянию
+        private void ResetBlockColors(int row, int col)
+        {
+            int startRow = (row / 3) * 3;
+            int startCol = (col / 3) * 3;
+
+            for (int r = startRow; r < startRow + 3; r++)
+            {
+                for (int c = startCol; c < startCol + 3; c++)
+                {
+                    var cell = dgv.Rows[r].Cells[c];
+
+                    if (cell.Value != null)
+                    {
+                        // Проверка цвета ячейки перед изменением
+                        if (cell.Style.BackColor != Color.Red)
+                        {
+                            if (cell.Value.ToString() == masGame[r, c].ToString())
+                                cell.Style.BackColor = Color.Gray;
+                            else
+                                cell.Style.BackColor = Color.White;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void OpenTestForm()
+        {
+            TestForm form = new TestForm(masMain, fileName);
+            form.Show();
         }
 
         private void Field_Load(object sender, EventArgs e)
